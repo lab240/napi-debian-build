@@ -1,0 +1,36 @@
+# packages.list - дополнительные пакеты
+# по одному на строку, комментарии через #
+#
+# mc
+# htop
+# wget
+# curl
+#vim 
+net-tools 
+can-utils 
+mbpoll 
+minicom
+tcpdump
+#screen
+memtester
+xxd
+tree
+util-linux-extra 
+mosquitto 
+mosquitto-clients 
+i2c-tools 
+python3-pymodbus 
+python3-pip 
+python3-smbus2 
+git 
+tmux
+mbusd
+bsdextrautils
+#make 
+#cmake 
+#gcc 
+#build-essential 
+#flex 
+#bison 
+#libssl-dev 
+#pkg-config

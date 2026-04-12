@@ -26,6 +26,7 @@ git
 tmux
 mbusd
 bsdextrautils
+gpiod
 #make 
 #cmake 
 #gcc 

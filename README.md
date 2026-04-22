@@ -1,14 +1,17 @@
 # Debian Build System for Napi-C, Napi-P, Napi-Slot (RK3308)
 
 Debian image builder for boards based on the Rockchip RK3308 SoC (arm64):
+
 - [Napi-C, Napi-P](https://github.com/napilab/napi-boards/blob/main/napic/README.md)
 - [Napi-Slot](https://github.com/napilab/napi-boards/tree/main/napi-slot)
 
 ![alt text](img/napicp.png)
 
 The build produces a bootable `.img.xz` disk image containing:
+
 - U-Boot for RK3308
 - Custom Linux 6.6 kernel with Rockchip patches
+- Linux kernel headers with native arm64 host scripts (for on-device module compilation)
 - Debian base system (trixie) with pre-installed packages
 
 ---
@@ -18,12 +21,14 @@ The build produces a bootable `.img.xz` disk image containing:
 - Linux x86_64
 - Must run as root (`sudo`)
 - `debootstrap`, `qemu-user-static`, `binfmt-support`, `parted`, `xz-utils` — installed automatically on first run
+- `gcc-aarch64-linux-gnu`, `libc6:arm64` — required for kernel build with native arm64 headers
 
 ---
 
 ## Pre-built Images
 
 Ready-to-flash images are available at:
+
 **<https://download.napilinux.ru/linuximg/napic/debian/>**
 
 ---
@@ -78,10 +83,8 @@ config.sh              — all configuration and helper functions
 mkimg.sh               — entry point, runs the build pipeline
 packages.list          — packages to install into the image
 napi-archive-keyring.asc — GPG key for deb.napilab.net
-
 kernel-rk-6.6/        — pre-built kernel and headers .deb files
 uboot/                 — pre-built U-Boot .deb for Napi-C
-
 scripts/
   00-build-kernel.sh   — build kernel from source (only with --build-kernel)
   01-create-image.sh   — create .img, partition, format ext4
@@ -136,6 +139,27 @@ The script will clone the kernel repository into `kernel-src/`, cross-compile `.
 
 Kernel repository: `https://gitlab.nnz-ipc.net/pub/napilinux/kernel.git`, branch `rk-6.6`.
 
+### Kernel Headers with arm64 Host Scripts
+
+When building with `--build-kernel`, the build system automatically repackages the `linux-headers` `.deb` so that all host utility binaries in `scripts/` (such as `fixdep`, `conf`, `modpost`, `kallsyms`) are compiled for arm64 instead of x86_64. This allows building out-of-tree kernel modules (DKMS, custom drivers) directly on the board without needing a cross-compilation setup.
+
+The repackaging process requires `libc6:arm64` and `qemu-user-static` on the host — these are installed automatically if missing.
+
+To manually repackage an existing headers `.deb`, use the provided helper script:
+
+```bash
+sudo bash fix-headers.sh
+```
+
+### Verifying Headers on the Board
+
+After installing the image or the headers package, verify that host scripts are native arm64:
+
+```bash
+file /lib/modules/$(uname -r)/build/scripts/basic/fixdep
+# Expected: ELF 64-bit LSB pie executable, ARM aarch64, ...
+```
+
 ---
 
 ## First Boot on the Board
@@ -143,5 +167,6 @@ Kernel repository: `https://gitlab.nnz-ipc.net/pub/napilinux/kernel.git`, branch
 On first boot the image automatically expands the partition to fill the available storage and reboots.
 
 SSH access:
+
 - User: `napi` / password: `napilinux`
 - User: `root` / password: `napilinux`

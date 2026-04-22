@@ -1,10 +1,10 @@
 # packages.list - дополнительные пакеты
 # по одному на строку, комментарии через #
 #
-# mc
-# htop
-# wget
-# curl
+mc
+htop
+wget
+curl
 #vim 
 net-tools 
 can-utils 
@@ -27,6 +27,8 @@ tmux
 mbusd
 bsdextrautils
 gpiod
+usbutils
+file
 #make 
 #cmake 
 #gcc 

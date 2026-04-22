@@ -15,7 +15,7 @@ dpkg -i /tmp/$(basename "${KERNEL_DEB}")
 rm -f /tmp/$(basename "${KERNEL_DEB}")
 CHROOT_EOF
 
-# Headers
+# Headers (install via apt install)
 if [[ -n "${HEADERS_DEB}" && -f "${KERNEL_DIR}/${HEADERS_DEB}" ]]; then
     cp "${KERNEL_DIR}/${HEADERS_DEB}" "${ROOTFS}/tmp/"
     chroot "${ROOTFS}" /bin/bash -e <<CHROOT_EOF

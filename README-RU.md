@@ -9,6 +9,7 @@
 Результат сборки — загрузочный образ диска `.img.xz` с:
 - U-Boot для RK3308
 - Кастомным ядром Linux 6.6 с патчами Rockchip
+- Заголовочными файлами ядра (headers) с нативными arm64 скриптами для сборки модулей на плате
 - Базовой системой Debian (trixie) с предустановленными пакетами
 
 ---
@@ -18,6 +19,7 @@
 - Linux x86_64
 - Запуск от root (`sudo`)
 - Пакеты `debootstrap`, `qemu-user-static`, `binfmt-support`, `parted`, `xz-utils` — устанавливаются автоматически при запуске сборки
+- `gcc-aarch64-linux-gnu`, `libc6:arm64` — необходимы для сборки ядра с нативными arm64 headers
 
 ---
 
@@ -77,6 +79,7 @@ sudo IMAGE_SIZE=4096 EXTRA_PKGS=mc,htop ./mkimg.sh --skip-xz
 config.sh              — вся конфигурация и вспомогательные функции
 mkimg.sh               — точка входа, запускает pipeline
 packages.list          — список пакетов для установки в образ
+fix-headers.sh         — перепаковка headers deb с arm64 скриптами
 napi-archive-keyring.asc — GPG-ключ репозитория deb.napilab.net
 
 kernel-rk-6.6/        — готовые .deb с ядром и headers
@@ -136,6 +139,27 @@ sudo ./mkimg.sh --build-kernel
 
 Репозиторий ядра: `https://gitlab.nnz-ipc.net/pub/napilinux/kernel.git`, ветка `rk-6.6`.
 
+### Заголовочные файлы ядра (headers) с arm64 скриптами
+
+При сборке с `--build-kernel` система автоматически перепаковывает `linux-headers` `.deb`, заменяя все служебные бинарники в `scripts/` (`fixdep`, `conf`, `modpost`, `kallsyms` и др.) на версии, скомпилированные для arm64 вместо x86_64. Это позволяет собирать внешние модули ядра (DKMS, драйверы Wi-Fi и т.д.) прямо на плате без кросс-компиляции.
+
+Для перепаковки на хосте требуются `libc6:arm64` и `qemu-user-static` — устанавливаются автоматически при их отсутствии.
+
+Для ручной перепаковки существующего headers `.deb` используйте вспомогательный скрипт:
+
+```bash
+sudo bash fix-headers.sh
+```
+
+### Проверка headers на плате
+
+После установки образа или пакета headers убедитесь, что скрипты нативные arm64:
+
+```bash
+file /lib/modules/$(uname -r)/build/scripts/basic/fixdep
+# Ожидается: ELF 64-bit LSB pie executable, ARM aarch64, ...
+```
+
 ---
 
 ## Первый запуск на плате
@@ -144,4 +168,4 @@ sudo ./mkimg.sh --build-kernel
 
 Доступ по SSH:
 - Пользователь: `napi` / пароль: `napilinux`
-- Пользователь: `root` / пароль: `napilinux`
+- Пользователь: `root` / пароль: `napilinux`  

@@ -3,6 +3,7 @@
 
 set -euo pipefail
 
+REBUILD_ROOTFS="${REBUILD_ROOTFS:-}"
 BASEDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SCRIPTS="${BASEDIR}/scripts"
 
@@ -53,7 +54,22 @@ if [[ "${HEADERS_DEB:-auto}" == "auto" ]]; then
 fi
 
 # --- U-Boot ---
-UBOOT_DEB="${UBOOT_DEB:-uboot/linux-u-boot-napic-current_07Apr-0113-rt_arm64__2024.10-Sf919-P872d-Hbed3-V3c06-Bbf55-R448a.deb}"
+
+UBOOT_DIR="${BASEDIR}/uboot"
+
+if [[ "${UBOOT_DEB:-auto}" == "auto" ]]; then
+    _files=("${UBOOT_DIR}"/linux-u-boot-napic-current_*.deb)
+    _count=${#_files[@]}
+    if [[ $_count -eq 0 || ! -f "${_files[0]}" ]]; then
+        die "U-Boot deb не найден в ${UBOOT_DIR}/"
+    elif [[ $_count -gt 1 ]]; then
+        log_error "В uboot/ найдено несколько deb, оставь один:"
+        for f in "${_files[@]}"; do log_error "  $(basename "$f")"; done
+        exit 1
+    fi
+    UBOOT_DEB=$(basename "${_files[0]}")
+fi
+
 
 # --- Debian ---
 DISTRIBUTION="${DISTRIBUTION:-trixie}"
